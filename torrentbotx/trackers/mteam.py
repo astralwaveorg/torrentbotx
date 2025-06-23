@@ -1,9 +1,12 @@
+import html
 from typing import Dict, Any, Optional
 
 import requests
 
 from torrentbotx.trackers.common import BaseTracker
+from torrentbotx.utils import Utility
 from torrentbotx.utils.logger import get_logger
+from torrentbotx.enums.mt_category_type import MtCategoryType
 
 logger = get_logger("trackers.mteam")
 
@@ -19,6 +22,7 @@ class MTeamTracker(BaseTracker):
     def search_torrents(self, keyword: str, page: int = 1, page_size: int = 5) -> Optional[Dict[str, Any]]:
         url = f"{self.base_url}/api/torrent/search"
         params = {
+            "mode": 'normal',
             "keyword": keyword,
             "pageNumber": page,
             "pageSize": page_size,
@@ -30,7 +34,44 @@ class MTeamTracker(BaseTracker):
             if data.get("message", "").upper() != 'SUCCESS' or "data" not in data:
                 logger.warning(f"M-Team 搜索种子失败: {data.get('message', '未知错误')}")
                 return None
-            return data["data"]
+            response_data_field = data.get("data")
+            if not isinstance(response_data_field, dict):
+                logger.warning(f"⚠️ M-Team API 搜索 '{keyword}' 返回的 'data' 字段格式错误，期望为字典。")
+                return {"torrents": [], "total_results": 0, "current_page_api": 1, "total_pages_api": 0,
+                        "items_per_page_api": page_size}
+            torrents_list_raw = response_data_field.get("data", [])
+            if not isinstance(torrents_list_raw, list):
+                logger.warning(f"⚠️ M-Team API 搜索 '{keyword}' 返回的 'data.data' 字段格式错误，期望为列表。")
+                torrents_list_raw = []
+            formatted_torrents = []
+            for t in torrents_list_raw:
+                if not isinstance(t, dict):
+                    logger.warning(f"⚠️ M-Team API 搜索结果中包含非字典类型的种子项: {t}")
+                    continue
+
+                title_to_display = t.get("smallDescr") or t.get("name", "未知标题")
+                subtitle_text = ""
+                if t.get("smallDescr") and t.get("name") != t.get("smallDescr"):
+                    subtitle_text = t.get("name", "")
+
+                display_text = (f"<b>👉 {html.escape(title_to_display)}</b>\n\n"
+                                + (
+                                    f"  ◉ 📝 种子名称: <i>{html.escape(subtitle_text[:72] + ('...' if len(subtitle_text) > 72 else ''))}</i>\n" if subtitle_text else "") +
+                                f"  ◉ 🆔 MT资源ID: <code>{t.get('id', 'N/A')}</code>\n"
+                                f"  ◉ 💾 资源大小: {Utility.format_bytes(int(t.get('size', 0)))}\n"
+                                f"  ◉ 📂 资源类型: {html.escape(MtCategoryType.get_by_id(str(t.get('category', '0'))))}\n"
+                                f"  ◉ 💰 优惠状态: {Utility.format_mteam_discount(t.get('status', {}).get('discount', ''))}"
+                                ).strip()
+                formatted_torrents.append(
+                    {"id": str(t.get('id')), "name": title_to_display, "display_text": display_text,
+                     "api_details": t})
+                return {
+                    "torrents": formatted_torrents,
+                    "total_results": response_data_field.get("total", 0),
+                    "current_page_api": response_data_field.get("pageNumber", page),
+                    "total_pages_api": response_data_field.get("totalPages", 0),
+                    "items_per_page_api": response_data_field.get("pageSize", page_size)
+                }
         except requests.exceptions.RequestException as e:
             logger.error(f"请求 M-Team 搜索种子时出错: {e}")
             return None

@@ -5,10 +5,13 @@ from torrentbotx.downloaders.base import get_downloader_instance
 from torrentbotx.enums.downloader_type import DownloaderType
 from torrentbotx.notifications import Notifier
 from torrentbotx.notifications.telegram_notifier import TelegramNotifier
+from torrentbotx.trackers import CarptTracker
 from torrentbotx.utils import get_logger
 
 logger = get_logger("core.manager")
 
+
+from torrentbotx.trackers.mteam import MTeamTracker
 
 class CoreManager:
     def __init__(self, config=None, notifier: Optional[Notifier] = None):
@@ -18,6 +21,19 @@ class CoreManager:
             chat_id=self.config.get("TG_ALLOWED_CHAT_IDS")
         )
         self.downloaders = self._init_downloaders()
+        self.trackers = {
+            "mteam": MTeamTracker(api_key=self.config.get("MT_APIKEY"),base_url=self.config.get("MT_HOST")),
+            "carpt": CarptTracker(api_key=self.config.get("CARPT_APIKEY"),base_url=self.config.get("CARPT_HOST"))
+        }
+
+    def get_tracker(self, name: str):
+        """
+        根据名称获取对应的tracker实例
+        """
+        tracker = self.trackers.get(name.lower())
+        if not tracker:
+            raise ValueError(f"未找到匹配的tracker: {name}")
+        return tracker
 
     def _init_downloaders(self) -> List:
         types = self.config.get("DOWNLOADERS", "qbittorrent")
@@ -40,6 +56,12 @@ class CoreManager:
 
         if not self.config.get("TG_BOT_TOKEN"):
             logger.warning("⚠️ 未配置 TG_BOT_TOKEN，无法发送 Telegram 通知")
+
+        # 初始化trackers
+        try:
+            _ = self.get_tracker("mteam")
+        except Exception as e:
+            logger.error(f"初始化tracker失败: {e}")
 
         self.notifier.send_message("CoreManager 启动完成 ✅")
 

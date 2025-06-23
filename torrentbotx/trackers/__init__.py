@@ -1,14 +1,10 @@
 from torrentbotx.trackers.carpt import CarptTracker
-from torrentbotx.trackers.dicmusic import DicMusicTracker
 from torrentbotx.trackers.mteam import MTeamTracker
-from torrentbotx.trackers.ptskit import PTSKitTracker
 
 # Tracker 初始化
 TRACKERS = {
     "mteam": MTeamTracker,
-    "dicmusic": DicMusicTracker,
     "carpt": CarptTracker,
-    "ptskit": PTSKitTracker,
 }
 
 

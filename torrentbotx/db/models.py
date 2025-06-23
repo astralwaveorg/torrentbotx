@@ -38,12 +38,12 @@ def create_tables():
             )
         ''')
 
-        # 创建用户表
+        # 创建分类表
         cursor.execute('''
-            CREATE TABLE IF NOT EXISTS users (
+            CREATE TABLE IF NOT EXISTS category (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT,
-                chat_id INTEGER
+                cate_id INTEGER,
+                name TEXT
             )
         ''')
 

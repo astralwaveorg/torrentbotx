@@ -16,7 +16,7 @@ def main():
     core_manager = CoreManager(config=config, notifier=notifier)
     core_manager.start()
 
-    start_bot(config.get("TG_BOT_TOKEN_MT"), core_manager)
+    start_bot(config, core_manager)
 
 
 if __name__ == "__main__":

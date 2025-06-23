@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import html
 import re
+from typing import Optional
 
 
 class Utility:
@@ -46,3 +48,24 @@ class Utility:
             len(hash_str) in {16, 32, 40}
             and re.fullmatch(r"[A-Za-z0-9]+", hash_str) is not None
         )
+
+    @staticmethod
+    def format_mteam_discount(discount_code: Optional[str]) -> str:
+        """
+        格式化M-Team种子的优惠状态信息。
+
+        Args:
+            discount_code (Optional[str]): 优惠代码（如'FREE'、'PERCENT_50'等），若为None或'NORMAL'表示无优惠。
+
+        Returns:
+            str: 格式化后的优惠提示字符串（如'🆓 免费!'、'💸 50% OFF'），未知代码返回原始描述。
+        """
+        if not discount_code or discount_code == "NORMAL":
+            return ""
+        discount_map = {
+            "FREE": "🆓 免费!", "PERCENT_25": "💸 25% OFF", "PERCENT_50": "💸 50% OFF",
+            "PERCENT_75": "💸 75% OFF", "FREE_2X": "🆓 2X Free!", "FREE_2X_PERCENT_50": "💸 2X 50% OFF"
+        }
+        return discount_map.get(discount_code.upper(), f"优惠: {html.escape(discount_code)}")
+
+

@@ -18,14 +18,14 @@ def setup_application(application: Application, bot_token: str):
             # MessageHandler(filters.Regex(f"^{constant.BUTTON_CONFIG.ADD_TASK_BTN}$"), ask_add_mt_id),
             # MessageHandler(filters.Regex(f"^{constant.BUTTON_CONFIG.MODIFY_CAT_BTN}$"), ask_setcat_mt_id),
             # MessageHandler(filters.Regex(f"^{constant.BUTTON_CONFIG.DELETE_TASK_BTN}$"), ask_del_mt_id),
-            MessageHandler(filters.Regex(f"^{constant.BUTTON_CONFIG.SEARCH_TORRENT_BTN}$"), ask_search_keywords),
+            MessageHandler(filters.Regex(f"^{constant.BUTTON_CONFIG['SEARCH_TORRENT_BTN']}$"), ask_search_keywords),
         ],
         states={
             CHOOSING_ACTION: [
                 # MessageHandler(filters.Regex(f"^{constant.BUTTON_CONFIG.ADD_TASK_BTN}$"), ask_add_mt_id),
                 # MessageHandler(filters.Regex(f"^{constant.BUTTON_CONFIG.MODIFY_CAT_BTN}$"), ask_setcat_mt_id),
                 # MessageHandler(filters.Regex(f"^{constant.BUTTON_CONFIG.DELETE_TASK_BTN}$"), ask_del_mt_id),
-                MessageHandler(filters.Regex(f"^{constant.BUTTON_CONFIG.SEARCH_TORRENT_BTN}$"), ask_search_keywords),
+                MessageHandler(filters.Regex(f"^{constant.BUTTON_CONFIG['SEARCH_TORRENT_BTN']}$"), ask_search_keywords),
             ],
             # ASK_ADD_MT_ID: [MessageHandler(filters.TEXT & ~filters.COMMAND, received_add_mt_id)],
             # SELECTING_ADD_CATEGORY: [CallbackQueryHandler(handle_add_category_selection, pattern=f"^{constant.BUTTON_CONFIG.ADD_CAT_PREFIX}")],
@@ -38,11 +38,7 @@ def setup_application(application: Application, bot_token: str):
             # CONFIRM_DEL_OPTIONS: [CallbackQueryHandler(received_del_option, pattern=f"^{constant.BUTTON_CONFIG.DEL_OPT_PREFIX}")],
 
             ASK_SEARCH_KEYWORDS: [MessageHandler(filters.TEXT & ~filters.COMMAND, received_search_keywords)],
-            SHOWING_SEARCH_RESULTS: [
-                # CallbackQueryHandler(handle_search_pagination, pattern=f"^{constant.BUTTON_CONFIG.SEARCH_PAGE_PREFIX}"),
-                # CallbackQueryHandler(handle_search_result_selection, pattern=f"^{constant.BUTTON_CONFIG.SEARCH_SELECT_PREFIX}"),
-                # CallbackQueryHandler(handle_search_cancel, pattern=f"^{constant.BUTTON_CONFIG.SEARCH_CANCEL_PREFIX}end_search"),
-            ],
+            SHOWING_SEARCH_RESULTS: [CallbackQueryHandler(display_search_results_page, pattern=f"^{constant.PREFIXES['SEARCH_PAGE_PREFIX']}")],
         },
         fallbacks=[
             CommandHandler("start", start),
@@ -77,7 +73,7 @@ def setup_application(application: Application, bot_token: str):
         entry_points=[CommandHandler("search", ask_search_keywords)],
         states={
             ASK_SEARCH_KEYWORDS: [MessageHandler(filters.TEXT & ~filters.COMMAND, received_search_keywords)],
-            SHOWING_SEARCH_RESULTS: [CallbackQueryHandler(display_search_results_page, pattern=f"^{constant.BUTTON_CONFIG.SEARCH_PAGE_PREFIX}")]
+            SHOWING_SEARCH_RESULTS: [CallbackQueryHandler(display_search_results_page, pattern=f"^{constant.PREFIXES['SEARCH_PAGE_PREFIX']}")],
         },
         fallbacks=[CommandHandler("cancel", cancel)],
     ))

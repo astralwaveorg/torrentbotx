@@ -8,7 +8,7 @@ from telegram.constants import ParseMode
 from telegram.ext import ContextTypes, ConversationHandler
 
 from torrentbotx import CoreManager, Config
-from torrentbotx.constant.constant import ASK_SEARCH_KEYWORDS, SHOWING_SEARCH_RESULTS, CHOOSING_ACTION
+from torrentbotx.constant.constant import ASK_SEARCH_KEYWORDS, SHOWING_SEARCH_RESULTS, CHOOSING_ACTION, BUTTON_CONFIG
 from torrentbotx.trackers import MTeamTracker
 from torrentbotx.utils.logger import get_logger
 from torrentbotx.constant import constant
@@ -19,11 +19,11 @@ logger = get_logger("telegram_handler")
 async def get_main_keyboard() -> InlineKeyboardMarkup:
     """生成主菜单键盘布局"""
     buttons = [
-        [InlineKeyboardButton(constant.BUTTON_CONFIG.ADD_TASK_BTN, callback_data="add_task")],
-        [InlineKeyboardButton(constant.BUTTON_CONFIG.SEARCH_TORRENT_BTN, callback_data="search_torrent")],
-        [InlineKeyboardButton(constant.BUTTON_CONFIG.DELETE_TASK_BTN, callback_data="delete_task")],
-        [InlineKeyboardButton(constant.BUTTON_CONFIG.MODIFY_CAT_BTN, callback_data="modify_category")],
-        [InlineKeyboardButton(constant.BUTTON_CONFIG.CANCEL_BTN, callback_data="cancel_operation")]
+        [InlineKeyboardButton(BUTTON_CONFIG["ADD_TASK_BTN"], callback_data="add_task")],
+        [InlineKeyboardButton(BUTTON_CONFIG["SEARCH_TORRENT_BTN"], callback_data="search_torrent")],
+        [InlineKeyboardButton(BUTTON_CONFIG["DELETE_TASK_BTN"], callback_data="delete_task")],
+        [InlineKeyboardButton(BUTTON_CONFIG["MODIFY_CAT_BTN"], callback_data="modify_category")],
+        [InlineKeyboardButton(BUTTON_CONFIG["CANCEL_BTN"], callback_data="cancel_operation")]
     ]
     return InlineKeyboardMarkup(buttons)
 

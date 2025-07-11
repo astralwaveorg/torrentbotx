@@ -27,10 +27,12 @@ class MTeamTracker(BaseTracker):
             "pageNumber": page,
             "pageSize": page_size,
         }
+        logger.info(f"M-Team 搜索种子参数: {params}")
         try:
             response = self.session.post(url, json=params, timeout=20)
             response.raise_for_status()
             data = response.json()
+            logger.info(f"M-Team 搜索种子结果: {data}")
             if data.get("message", "").upper() != 'SUCCESS' or "data" not in data:
                 logger.warning(f"M-Team 搜索种子失败: {data.get('message', '未知错误')}")
                 return None
@@ -54,24 +56,27 @@ class MTeamTracker(BaseTracker):
                 if t.get("smallDescr") and t.get("name") != t.get("smallDescr"):
                     subtitle_text = t.get("name", "")
 
+                category_id = str(t.get('category', '0'))
+                category_name = MtCategoryType.get_display_name_by_id(category_id)
+
                 display_text = (f"<b>👉 {html.escape(title_to_display)}</b>\n\n"
                                 + (
                                     f"  ◉ 📝 种子名称: <i>{html.escape(subtitle_text[:72] + ('...' if len(subtitle_text) > 72 else ''))}</i>\n" if subtitle_text else "") +
                                 f"  ◉ 🆔 MT资源ID: <code>{t.get('id', 'N/A')}</code>\n"
                                 f"  ◉ 💾 资源大小: {Utility.format_bytes(int(t.get('size', 0)))}\n"
-                                f"  ◉ 📂 资源类型: {html.escape(MtCategoryType.get_by_id(str(t.get('category', '0'))))}\n"
+                                f"  ◉ 📂 资源类型: {html.escape(category_name)}\n"
                                 f"  ◉ 💰 优惠状态: {Utility.format_mteam_discount(t.get('status', {}).get('discount', ''))}"
                                 ).strip()
                 formatted_torrents.append(
                     {"id": str(t.get('id')), "name": title_to_display, "display_text": display_text,
                      "api_details": t})
-                return {
-                    "torrents": formatted_torrents,
-                    "total_results": response_data_field.get("total", 0),
-                    "current_page_api": response_data_field.get("pageNumber", page),
-                    "total_pages_api": response_data_field.get("totalPages", 0),
-                    "items_per_page_api": response_data_field.get("pageSize", page_size)
-                }
+            return {
+                "torrents": formatted_torrents,
+                "total_results": response_data_field.get("total", 0),
+                "current_page_api": response_data_field.get("pageNumber", page),
+                "total_pages_api": response_data_field.get("totalPages", 0),
+                "items_per_page_api": response_data_field.get("pageSize", page_size)
+            }
         except requests.exceptions.RequestException as e:
             logger.error(f"请求 M-Team 搜索种子时出错: {e}")
             return None

@@ -8,10 +8,11 @@ from telegram.constants import ParseMode
 from telegram.ext import ContextTypes, ConversationHandler
 
 from torrentbotx import CoreManager, Config
-from torrentbotx.constant.constant import ASK_SEARCH_KEYWORDS, SHOWING_SEARCH_RESULTS, CHOOSING_ACTION, BUTTON_CONFIG
 from torrentbotx.trackers import MTeamTracker
 from torrentbotx.utils.logger import get_logger
-from torrentbotx.constant import constant
+from torrentbotx.constant.constant import PREFIXES, BUTTON_CONFIG, CHOOSING_ACTION, \
+    ASK_SEARCH_KEYWORDS, SHOWING_SEARCH_RESULTS  # ✅ 导入 PREFIXES 字典
+
 
 logger = get_logger("telegram_handler")
 
@@ -53,12 +54,12 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     help_text = (
         "<b>💡 M-Team 与 qBittorrent 管理助手 - 帮助信息</b>\n\n"
         "<b>主菜单操作 (通过下方按钮触发):</b>\n"
-        f"  <code>{constant.BUTTON_CONFIG.ADD_TASK_BTN}</code>: 根据 M-Team 种子ID 添加下载任务到 qBittorrent。\n"
-        f"  <code>{constant.BUTTON_CONFIG.MODIFY_CAT_BTN}</code>: 修改 qBittorrent 中现有任务的分类。\n"
-        f"  <code>{constant.BUTTON_CONFIG.SEARCH_TORRENT_BTN}</code>: 通过关键词在 M-Team 网站搜索种子。\n"
-        f"  <code>{constant.BUTTON_CONFIG.DELETE_TASK_BTN}</code>: 从 qBittorrent 删除任务 (可选是否删除文件)。\n"
-        f"  <code>{constant.BUTTON_CONFIG.CANCEL_BTN}</code>: 取消当前操作并返回主菜单。\n\n"
-        f"  <code>{constant.BUTTON_CONFIG.CANCEL_OPT}</code>: 取消当前操。\n\n"
+        f"  <code>{BUTTON_CONFIG.ADD_TASK_BTN}</code>: 根据 M-Team 种子ID 添加下载任务到 qBittorrent。\n"
+        f"  <code>{BUTTON_CONFIG.MODIFY_CAT_BTN}</code>: 修改 qBittorrent 中现有任务的分类。\n"
+        f"  <code>{BUTTON_CONFIG.SEARCH_TORRENT_BTN}</code>: 通过关键词在 M-Team 网站搜索种子。\n"
+        f"  <code>{BUTTON_CONFIG.DELETE_TASK_BTN}</code>: 从 qBittorrent 删除任务 (可选是否删除文件)。\n"
+        f"  <code>{BUTTON_CONFIG.CANCEL_BTN}</code>: 取消当前操作并返回主菜单。\n\n"
+        f"  <code>{BUTTON_CONFIG.CANCEL_OPT}</code>: 取消当前操。\n\n"
         "<b>快捷命令:</b>\n"
         "  <code>/start</code> - 显示主菜单，开始交互。\n"
         "  <code>/add &lt;M-Team ID&gt;</code> - 直接添加指定 M-Team ID 的种子到 qBittorrent。例如: <code>/add 12345</code>\n"
@@ -140,6 +141,22 @@ async def received_search_keywords(update: Update, context: ContextTypes.DEFAULT
 
     return await display_search_results_page(update, context, page_num=0)
 
+async def button_search_page(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    query = update.callback_query
+    await query.answer()
+
+    if not query.data or not query.data.startswith(PREFIXES["SEARCH_PAGE_PREFIX"]):
+        logger.error("无效的分页回调数据")
+        return SHOWING_SEARCH_RESULTS
+
+    try:
+        page_num = int(query.data[len(PREFIXES["SEARCH_PAGE_PREFIX"]):])
+    except ValueError:
+        logger.error(f"无法解析页码: {query.data}")
+        return SHOWING_SEARCH_RESULTS
+
+    return await display_search_results_page(update, context, page_num=page_num)
+
 async def display_search_results_page(
         update_obj: Union[Update, telegram.CallbackQuery],
         context: ContextTypes.DEFAULT_TYPE,
@@ -184,7 +201,8 @@ async def display_search_results_page(
     results_data = await asyncio.to_thread(
         mteam.search_torrents,
         keyword=keywords,
-        page=page_num + 1
+        page=page_num + 1,
+        page_size=config.get("search_page_size", 5)
     )
 
     if processing_msg_obj:
@@ -230,23 +248,23 @@ async def display_search_results_page(
         btn_text_name = t['name'][:30] + '...' if len(t['name']) > 30 else t['name']
         keyboard_rows.append([
             InlineKeyboardButton(f"📥 下载: {html.escape(btn_text_name)} (ID: {t['id']})",
-                                 callback_data=f"{constant.PREFIXES.SEARCH_SELECT_PREFIX}{t['id']}")
+                                 callback_data=f"{PREFIXES['SEARCH_SELECT_PREFIX']}{t['id']}")
         ])
 
     pagination_buttons_row: List[InlineKeyboardButton] = []
     if page_num > 0:
         pagination_buttons_row.append(
-            InlineKeyboardButton("⬅️ 上一页", callback_data=f"{constant.PREFIXES.SEARCH_PAGE_PREFIX}{page_num - 1}")
+            InlineKeyboardButton("⬅️ 上一页", callback_data=f"{PREFIXES['SEARCH_PAGE_PREFIX']}{page_num - 1}")
         )
     if (page_num + 1) < total_pages_api:
         pagination_buttons_row.append(
-            InlineKeyboardButton("➡️ 下一页", callback_data=f"{constant.PREFIXES.SEARCH_PAGE_PREFIX}{page_num + 1}")
+            InlineKeyboardButton("➡️ 下一页", callback_data=f"{PREFIXES['SEARCH_PAGE_PREFIX']}{page_num + 1}")
         )
     if pagination_buttons_row:
         keyboard_rows.append(pagination_buttons_row)
 
     keyboard_rows.append(
-        [InlineKeyboardButton("❌ 取消搜索并返回主菜单", callback_data=f"{constant.PREFIXES.SEARCH_CANCEL_PREFIX}end_search")])
+        [InlineKeyboardButton("❌ 取消搜索并返回主菜单", callback_data=f"{PREFIXES['SEARCH_CANCEL_PREFIX']}end_search")])
 
     page_info_footer = ""
     if total_pages_api > 0:

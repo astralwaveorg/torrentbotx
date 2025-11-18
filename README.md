@@ -69,7 +69,7 @@ torrentbotx/
 ### 1. 克隆项目
 
 ```bash
-git clone https://github.com/astralwaveio/torrentbotx.git
+git clone https://github.com/astralwaveorg/torrentbotx.git
 cd torrentbotx
 ```
 
@@ -267,15 +267,15 @@ pip freeze > requirements.txt
 
 ## ✅ 推荐工具生态
 
-| 工具              | 用途          |
-|-----------------|-------------|
-| black           | 代码格式化       |
-| isort           | import 排序   |
-| flake8 / pylint | 静态代码检查      |
-| mypy            | 类型检查        |
-| pydantic        | 配置/数据校验     |
-| pytest          | 单元测试        |
-| coverage.py     | 测试覆盖率       |
+| 工具            | 用途               |
+| --------------- | ------------------ |
+| black           | 代码格式化         |
+| isort           | import 排序        |
+| flake8 / pylint | 静态代码检查       |
+| mypy            | 类型检查           |
+| pydantic        | 配置/数据校验      |
+| pytest          | 单元测试           |
+| coverage.py     | 测试覆盖率         |
 | pre-commit      | Git 提交前自动检查 |
 
 ---
